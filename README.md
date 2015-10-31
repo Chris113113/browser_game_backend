@@ -7,3 +7,4 @@ It will mainly focus on being a websocket and database controller.
 ## Design Specifications
 
 - [ ] Chat via websockets, keeping track of who is who by IP/fingerprinting.
+- [ ] Track high scores
