@@ -51,11 +51,13 @@ io.on('connection', function(socket){
   socket.on('add_user', function(userName){
     //store username
     socket.userName = userName;
+    console.log('Adding user: ' + socket.userName);
     //store on global arr of user names
     userNames[userName] = userName;
     ++numUsers;
     //registered user
     addedUser = true;
+    //send the updated number of logged in users
     socket.emit('login',{
       numUsers: numUsers
     });
