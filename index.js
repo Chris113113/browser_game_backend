@@ -53,64 +53,76 @@ app.get('/flushDB', function(req, res) {
 
 //socket io
 
-var userNames = {};
+// Chatroom
+
+// usernames which are currently connected to the chat
+var usernames = {};
 var numUsers = 0;
 
-io.on('connection', function(socket){
-  console.log('a user connected');
-  //set flag to register user
+
+
+io.on('connection', function (socket) {
   var addedUser = false;
-  //disconnect log console msg
-  socket.on('disconnect', function(){
-    console.log('user disconected');
-    //remove user from the global list
-    if(addedUser){
-      delete userName[socket.userName];
+
+  // when the client emits 'new message', this listens and executes
+  socket.on('new message', function (data) {
+    // we tell the client to execute 'new message'
+    socket.broadcast.emit('new message', {
+      username: socket.username,
+      message: data
+    });
+    console.log('Message sent from ' +  socket.username + 'Message: ' + data);
+  });
+
+  socket.emit('logged users', {
+    numUsers: numUsers
+  });
+  // when the client emits 'add user', this listens and executes
+  socket.on('add user', function (username) {
+    // we store the username in the socket session for this client
+    socket.username = username;
+    // add the client's username to the global list
+    usernames[username] = username;
+    ++numUsers;
+    addedUser = true;
+    socket.emit('login', {
+      numUsers: numUsers
+    });
+    // echo globally (all clients) that a person has connected
+    socket.broadcast.emit('user joined', {
+      username: socket.username,
+      numUsers: numUsers
+    });
+  });
+
+  // when the client emits 'typing', we broadcast it to others
+  socket.on('typing', function () {
+    socket.broadcast.emit('typing', {
+      username: socket.username
+    });
+  });
+
+  // when the client emits 'stop typing', we broadcast it to others
+  socket.on('stop typing', function () {
+    socket.broadcast.emit('stop typing', {
+      username: socket.username
+    });
+  });
+
+  // when the user disconnects.. perform this
+  socket.on('disconnect', function () {
+    // remove the username from global usernames list
+    if (addedUser) {
+      delete usernames[socket.username];
       --numUsers;
 
-      //broadcase leave message
-      socket.broadcast.emit('user_left', {
-        userName: socket.userName,
+      // echo globally that this client has left
+      socket.broadcast.emit('user left', {
+        username: socket.username,
         numUsers: numUsers
       });
     }
   });
-  //chat new message event
-  socket.on('chat_message', function(msg){
-    io.broadcast.emit('chat_message', {
-      userName: socket.userName,
-      message:msg
-    });
-  });
-
-  //adding user to chat room
-  socket.on('add_user', function(userName){
-    //store username
-    socket.userName = userName;
-    console.log('Adding user: ' + socket.userName);
-    //store on global arr of user names
-    userNames[userName] = userName;
-    ++numUsers;
-    //registered user
-    addedUser = true;
-    //send the updated number of logged in users
-    socket.emit('login',{
-      numUsers: numUsers
-    });
-    //broadcast new user joined chat room
-    socket.broadcast.emit('user_joined', {
-      userName : socket.userName,
-      numUsers : numUsers
-    });
-
-    //user typing message broadcast
-
-
-
-  });
-
-
-
 });
 
 //listening event on port 3000
