@@ -1,6 +1,8 @@
 var express = require('express');
+
 var redis = require('redis');
 var client = redis.createClient();
+
 var app = express();
 //server
 var http = require('http').Server(app);
@@ -14,6 +16,7 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 
+
 //serve public folder
 app.use(express.static('public'));
 app.use(express.static('node_modules/boostrap'));
@@ -23,6 +26,7 @@ app.get('/', function(req, res){
   //serve index.html
   res.sendFile(__dirname + '/public/index.html');
 });
+
 
 // Store a new high score
 app.post('/score', function(req, res){
@@ -35,6 +39,7 @@ app.post('/score', function(req, res){
     }
   });
 });
+
 
 app.get('/score', function(req, res) {
   client.lrange('scores', 0, -1, function(err, reply) {
@@ -50,6 +55,7 @@ app.get('/flushDB', function(req, res) {
     res.status(200).json(reply);
   });
 })
+
 
 //socket io
 
