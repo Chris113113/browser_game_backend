@@ -57,6 +57,7 @@ $(function(){
   function AddUser(){
     console.log('adding user');
     userName = $('#input').val();
+    if(userName){
     //send server the username
     socket.emit('add user', userName);
     //connected flag to true
@@ -66,6 +67,7 @@ $(function(){
     //display login name
     $('.user-name').empty();
     $('.user-name').text(userName);
+  }
   };
 
   function SendMessage(){
@@ -75,11 +77,12 @@ $(function(){
     if(msg && connected){
       //remove input from text box
       $message.val('');
+      $message.attr('placeholder', 'Send a message...');
       //call addChatMessage function
       addChatMessage({
        username: userName,
        message: msg
-     });
+     }, {color: 'FA6F57'});
      // tell server to execute 'new message' and send along one parameter
      socket.emit('new message', msg);
 
@@ -92,6 +95,7 @@ $(function(){
 
   function addChatMessage (data, options) {
      options = options || {};
+     var color = options.color;
      var user = data.username;
      var message = data.message;
      var date = new Date();
@@ -107,7 +111,7 @@ $(function(){
      var $mediaContainer = $('<div class="media"></div>');
 
      var $linkImgContainer = $('<a class="pull-left" href="#"></a>');
-     var $img = $('<img class="media-object img-circle" src="http://lorempixel.com/30/30/people/1/" alt="">');
+     var $img = $('<img class="media-object img-circle" src="http://placehold.it/45/'+color+'/fff&text='+user.substring(0,1)+'" alt="">');
 
      $linkImgContainer.append($img);
 
@@ -171,7 +175,7 @@ $(function(){
 
   // Whenever the server emits 'new message', update the chat body
  socket.on('new message', function (data) {
-   addChatMessage(data);
+   addChatMessage(data, {color: '6f57fa'});
   });
 
 function getDateTime() {
@@ -203,7 +207,18 @@ function getDateTime() {
 
 };
 
+// Keyboard events
+$window.keydown(function (event) {
 
+  // When the client hits ENTER on their keyboard
+  if (event.which === 13) {
+    if (userName) {
+      SendMessage();
+    }else{
+      AddUser();
+    }
+  }
+});
 
 function formatAMPM(date) {
   var hours = date.getHours();
